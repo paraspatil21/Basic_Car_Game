@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Car Racing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #fff;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        #gameStartScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #0c2461 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        #gameStartScreen h1 {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            letter-spacing: 3px;
+        }
+
+        #gameStartScreen p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #aaa;
+            max-width: 500px;
+        }
+
+        .gameButton {
+            background: linear-gradient(90deg, #ee5a24, #f79f1f);
+            border: none;
+            padding: 18px 45px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            color: white;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(238, 90, 36, 0.4);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .gameButton:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(238, 90, 36, 0.6);
+        }
+
+        .gameButton:active {
+            transform: translateY(1px);
+        }
+
+        #gameCanvas {
+            background: #1e272e;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border: 2px solid #353b48;
+        }
+
+        .gameHUD {
+            position: fixed;
+            top: 20px;
+            width: 90%;
+            max-width: 800px;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .hudSection {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hudLabel {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hudValue {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        #speedValue {
+            color: #feca57;
+        }
+
+        #levelValue {
+            color: #48dbfb;
+        }
+
+        #scoreValue {
+            color: #ff9ff3;
+        }
+
+        #fuelBarContainer {
+            width: 150px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            margin-top: 5px;
+        }
+
+        #fuelBar {
+            height: 100%;
+            background: linear-gradient(90deg, #0be881, #05c46b);
+            width: 100%;
+            transition: width 0.5s;
+        }
+
+        .controlsContainer {
+            position: fixed;
+            bottom: 30px;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .pedalButton {
+            background: linear-gradient(180deg, #2d3436, #000);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            box-shadow: 0 8px 0 #111, 0 15px 20px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+            border: 3px solid #444;
+        }
+
+        .pedalButton:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 #111, 0 5px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        #brakePedal {
+            background: linear-gradient(180deg, #ff3838, #b33939);
+        }
+
+        #gasPedal {
+            background: linear-gradient(180deg, #0be881, #05c46b);
+        }
+
+        .arrowButtons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .arrowButton {
+            background: rgba(255, 255, 255, 0.15);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+
+        .arrowButton:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .carInfo {
+            position: fixed;
+            bottom: 120px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border-left: 5px solid #ee5a24;
+            font-size: 0.9rem;
+            max-width: 200px;
+        }
+
+        .levelUpNotification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 30px 50px;
+            border-radius: 15px;
+            border: 3px solid #48dbfb;
+            text-align: center;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 0 50px rgba(72, 219, 251, 0.5);
+        }
+
+        .levelUpNotification h2 {
+            color: #48dbfb;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .levelUpNotification p {
+            color: #ddd;
+            font-size: 1.2rem;
+        }
+
+        .gameOverScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .gameOverScreen h2 {
+            font-size: 3.5rem;
+            color: #ff6b6b;
+            margin-bottom: 20px;
+        }
+
+        .gameOverScreen p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <!-- Start Screen -->
+    <div id="gameStartScreen">
+        <h1>🚗 ADVANCED RACING 🏁</h1>
+        <p>Dodge traffic, manage your fuel, and climb through levels!<br>Use arrow buttons to steer, gas to accelerate, and brake to slow down.</p>
+        <button class="gameButton" onclick="startGame()">START RACE</button>
+        <div style="margin-top: 30px; color: #777; font-size: 0.9rem;">
+            <p>🎯 Score points by dodging cars<br>⛽ Collect fuel cans<br>🚀 Complete Level 1 after 50 cars</p>
+        </div>
+    </div>
+
+    <!-- Game HUD -->
+    <div class="gameHUD" style="display: none;" id="gameHUD">
+        <div class="hudSection">
+            <div class="hudLabel">Speed</div>
+            <div class="hudValue"><span id="speedValue">0</span> km/h</div>
+        </div>
+        <div class="hudSection">
+            <div class="hudLabel">Level</div>
+            <div class="hudValue">🏁 <span id="levelValue">1</span></div>
+        </div>
+        <div class="hudSection">
+            <div class="hudLabel">Score</div>
+            <div class="hudValue"><span id="scoreValue">0</span></div>
+        </div>
+        <div class="hudSection">
+            <div class="hudLabel">Fuel</div>
+            <div class="hudValue" id="fuelValue">100%</div>
+            <div id="fuelBarContainer">
+                <div id="fuelBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" width="360" height="600"></canvas>
+
+    <!-- Car Info -->
+    <div class="carInfo" id="carInfo" style="display: none;">
+        🚗 Player: <span style="color:#feca57">SPORTS 9000</span><br>
+        ⚙️ Engine: V8 Turbo<br>
+        📍 Lane: <span id="currentLane">2</span>/3
+    </div>
+
+    <!-- Level Up Notification -->
+    <div class="levelUpNotification" id="levelUpNotification">
+        <h2>LEVEL UP! 🎉</h2>
+        <p>You've entered <span id="newLevelText">Level 2</span></p>
+        <p style="font-size: 1rem; margin-top: 15px; color: #feca57;">+ More traffic + Higher speed!</p>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div class="gameOverScreen" id="gameOverScreen">
+        <h2>GAME OVER</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <p>Level Reached: <span id="finalLevel">1</span></p>
+        <button class="gameButton" onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
+    <!-- Controls -->
+    <div class="controlsContainer" id="controlsContainer" style="display: none;">
+        <div class="pedalButton" id="brakePedal" ontouchstart="applyBrake()" ontouchend="releaseBrake()" onmousedown="applyBrake()" onmouseup="releaseBrake()">
+            🚦
+        </div>
+        
+        <div class="arrowButtons">
+            <div class="arrowButton" ontouchstart="moveLeft()" ontouchend="clearMove()" onmousedown="moveLeft()" onmouseup="clearMove()">
+                ⬅️
+            </div>
+            <div class="arrowButton" ontouchstart="moveRight()" ontouchend="clearMove()" onmousedown="moveRight()" onmouseup="clearMove()">
+                ➡️
+            </div>
+        </div>
+        
+        <div class="pedalButton" id="gasPedal" ontouchstart="applyGas()" ontouchend="releaseGas()" onmousedown="applyGas()" onmouseup="releaseGas()">
+            🚀
+        </div>
+    </div>
+
+    <!-- Audio -->
+    <audio id="engineSound" loop>
+        <!-- Alternative engine sound source since the original is unavailable -->
+        <source src="https://assets.mixkit.co/music/preview/mixkit-racing-game-988.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="collisionSound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-collision-debris-1562.mp3" preload="auto"></audio>
+    <audio id="fuelSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+    <audio id="levelUpSound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+
+    <script>
+        // Game Variables
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gameRunning = false;
+        let gameLoopId;
+        
+        // Player Car
+        const playerCar = {
+            x: 160,
+            y: 480,
+            width: 40,
+            height: 80,
+            speed: 5,
+            maxSpeed: 20,
+            acceleration: 0.2,
+            deceleration: 0.1,
+            lane: 2, // 1=left, 2=center, 3=right
+            fuel: 100,
+            fuelConsumption: 0.03,
+            score: 0,
+            level: 1,
+            carsPassed: 0,
+            color: '#ff3838'
+        };
+        
+        // Traffic and Items
+        let trafficCars = [];
+        let fuelCans = [];
+        let roadY = 0;
+        
+        // Controls State
+        let keys = {
+            left: false,
+            right: false,
+            gas: false,
+            brake: false
+        };
+        
+        // Lane Positions
+        const lanePositions = [60, 160, 260];
+        
+        // Start Game Function
+        function startGame() {
+            document.getElementById('gameStartScreen').style.display = 'none';
+            document.getElementById('gameHUD').style.display = 'flex';
+            document.getElementById('controlsContainer').style.display = 'flex';
+            document.getElementById('carInfo').style.display = 'block';
+            
+            // Start engine sound
+            document.getElementById('engineSound').play().catch(e => console.log("Audio play failed:", e));
+            
+            gameRunning = true;
+            
+            // Start game loops
+            setInterval(addTrafficCar, 1200); // Add traffic every 1.2 seconds
+            setInterval(addFuelCan, 8000); // Add fuel can every 8 seconds
+            setInterval(updateFuel, 100); // Update fuel every 100ms
+            
+            // Start main game loop
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+        
+        // Add Traffic Car
+        function addTrafficCar() {
+            if (!gameRunning) return;
+            
+            // Random lane (1-3)
+            const lane = Math.floor(Math.random() * 3) + 1;
+            
+            // Random car type
+            const carTypes = [
+                { color: '#3498db', width: 40, height: 80 }, // Blue sedan
+                { color: '#2ecc71', width: 45, height: 85 }, // Green SUV
+                { color: '#9b59b6', width: 35, height: 75 }, // Purple sports
+                { color: '#f1c40f', width: 50, height: 90 }  // Yellow truck
+            ];
+            
+            const type = carTypes[Math.floor(Math.random() * carTypes.length)];
+            
+            trafficCars.push({
+                x: lanePositions[lane - 1],
+                y: -100,
+                width: type.width,
+                height: type.height,
+                color: type.color,
+                speed: 3 + playerCar.level * 0.5,
+                lane: lane
+            });
+        }
+        
+        // Add Fuel Can
+        function addFuelCan() {
+            if (!gameRunning || playerCar.fuel > 70) return;
+            
+            const lane = Math.floor(Math.random() * 3) + 1;
+            
+            fuelCans.push({
+                x: lanePositions[lane - 1],
+                y: -50,
+                width: 25,
+                height: 40,
+                collected: false
+            });
+        }
+        
+        // Update Fuel
+        function updateFuel() {
+            if (!gameRunning) return;
+            
+            // Consume fuel based on speed and gas pedal
+            let consumption = playerCar.fuelConsumption;
+            if (keys.gas) consumption *= 1.5;
+            
+            playerCar.fuel -= consumption;
+            
+            // If fuel runs out, slow down
+            if (playerCar.fuel <= 0) {
+                playerCar.fuel = 0;
+                playerCar.speed *= 0.98; // Slow down gradually
+            }
+            
+            // Update fuel display
+            document.getElementById('fuelValue').textContent = Math.max(0, Math.floor(playerCar.fuel)) + '%';
+            document.getElementById('fuelBar').style.width = playerCar.fuel + '%';
+            
+            // Change color based on fuel level
+            const fuelBar = document.getElementById('fuelBar');
+            if (playerCar.fuel > 50) {
+                fuelBar.style.background = 'linear-gradient(90deg, #0be881, #05c46b)';
+            } else if (playerCar.fuel > 20) {
+                fuelBar.style.background = 'linear-gradient(90deg, #feca57, #ee5a24)';
+            } else {
+                fuelBar.style.background = 'linear-gradient(90deg, #ff3838, #b33939)';
+            }
+            
+            // Game over if fuel reaches 0 and speed is very low
+            if (playerCar.fuel <= 0 && playerCar.speed < 2) {
+                gameOver("Out of Fuel!");
+            }
+        }
+        
+        // Draw Road
+        function drawRoad() {
+            // Road surface
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Road markings
+            ctx.setLineDash([20, 20]);
+            ctx.strokeStyle = '#f1c40f';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, roadY);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            
+            ctx.setLineDash([30, 30]);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 - 100, roadY + 10);
+            ctx.lineTo(canvas.width / 2 - 100, canvas.height);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2 + 100, roadY + 10);
+            ctx.lineTo(canvas.width / 2 + 100, canvas.height);
+            ctx.stroke();
+            
+            // Animate road
+            roadY += playerCar.speed;
+            if (roadY > 40) roadY = 0;
+            
+            // Remove line dash for other drawings
+            ctx.setLineDash([]);
+        }
+        
+        // Draw Player Car
+        function drawPlayerCar() {
+            // Car body
+            ctx.fillStyle = playerCar.color;
+            ctx.fillRect(playerCar.x, playerCar.y, playerCar.width, playerCar.height);
+            
+            // Car details
+            ctx.fillStyle = '#333';
+            ctx.fillRect(playerCar.x + 5, playerCar.y + 10, playerCar.width - 10, 15); // Window
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(playerCar.x + 10, playerCar.y + playerCar.height - 15, 8, 10); // Left wheel
+            ctx.fillRect(playerCar.x + playerCar.width - 18, playerCar.y + playerCar.height - 15, 8, 10); // Right wheel
+            
+            // Headlights
+            ctx.fillStyle = '#f1c40f';
+            ctx.beginPath();
+            ctx.arc(playerCar.x + 5, playerCar.y + 5, 3, 0, Math.PI * 2);
+            ctx.arc(playerCar.x + playerCar.width - 5, playerCar.y + 5, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Brand logo
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText('SPORTS', playerCar.x + 12, playerCar.y + 25);
+            ctx.font = 'bold 8px Arial';
+            ctx.fillText('9000', playerCar.x + 15, playerCar.y + 35);
+        }
+        
+        // Draw Traffic Cars
+        function drawTrafficCars() {
+            trafficCars.forEach(car => {
+                // Move car down
+                car.y += car.speed;
+                
+                // Draw car
+                ctx.fillStyle = car.color;
+                ctx.fillRect(car.x, car.y, car.width, car.height);
+                
+                // Car details
+                ctx.fillStyle = '#333';
+                ctx.fillRect(car.x + 5, car.y + 10, car.width - 10, 15); // Window
+                ctx.fillStyle = '#2c3e50';
+                ctx.fillRect(car.x + 10, car.y + car.height - 15, 8, 10); // Wheels
+                ctx.fillRect(car.x + car.width - 18, car.y + car.height - 15, 8, 10);
+                
+                // Check if car passed
+                if (car.y > canvas.height) {
+                    playerCar.carsPassed++;
+                    playerCar.score += 10;
+                    
+                    // Check for level up (every 50 cars)
+                    if (playerCar.carsPassed >= 50 && playerCar.level === 1) {
+                        levelUp();
+                    }
+                    
+                    // Remove car
+                    trafficCars = trafficCars.filter(c => c !== car);
+                }
+                
+                // Check collision with player
+                if (car.y < playerCar.y + playerCar.height && 
+                    car.y + car.height > playerCar.y &&
+                    car.x < playerCar.x + playerCar.width && 
+                    car.x + car.width > playerCar.x) {
+                    
+                    // Play collision sound
+                    document.getElementById('collisionSound').play().catch(e => console.log("Audio play failed:", e));
+                    gameOver("Collision!");
+                }
+            });
+            
+            // Remove cars that are far off screen
+            trafficCars = trafficCars.filter(car => car.y < canvas.height + 100);
+        }
+        
+        // Draw Fuel Cans
+        function drawFuelCans() {
+            fuelCans.forEach(can => {
+                // Move can down
+                can.y += playerCar.speed * 0.8;
+                
+                // Draw fuel can
+                ctx.fillStyle = '#feca57';
+                ctx.fillRect(can.x, can.y, can.width, can.height);
+                
+                // Can details
+                ctx.fillStyle = '#ee5a24';
+                ctx.fillRect(can.x + 5, can.y + 5, can.width - 10, 10);
+                ctx.fillRect(can.x + 8, can.y + 20, can.width - 16, 15);
+                
+                // Fuel symbol
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText('⛽', can.x + 8, can.y + 25);
+                
+                // Check collection
+                if (can.y < playerCar.y + playerCar.height && 
+                    can.y + can.height > playerCar.y &&
+                    can.x < playerCar.x + playerCar.width && 
+                    can.x + can.width > playerCar.x && !can.collected) {
+                    
+                    // Collect fuel can
+                    can.collected = true;
+                    playerCar.fuel = Math.min(100, playerCar.fuel + 30);
+                    playerCar.score += 50;
+                    
+                    // Play fuel sound
+                    document.getElementById('fuelSound').play().catch(e => console.log("Audio play failed:", e));
+                    
+                    // Remove can
+                    fuelCans = fuelCans.filter(c => c !== can);
+                }
+                
+                // Remove if off screen
+                if (can.y > canvas.height) {
+                    fuelCans = fuelCans.filter(c => c !== can);
+                }
+            });
+        }
+        
+        // Level Up Function
+        function levelUp() {
+            playerCar.level = 2;
+            
+            // Update display
+            document.getElementById('levelValue').textContent = playerCar.level;
+            document.getElementById('newLevelText').textContent = 'Level ' + playerCar.level;
+            
+            // Show notification
+            const notification = document.getElementById('levelUpNotification');
+            notification.style.display = 'block';
+            
+            // Play level up sound
+            document.getElementById('levelUpSound').play().catch(e => console.log("Audio play failed:", e));
+            
+            // Hide notification after 3 seconds
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+            
+            // Increase difficulty
+            playerCar.maxSpeed = 25;
+        }
+        
+        // Game Over Function
+        function gameOver(reason) {
+            gameRunning = false;
+            
+            // Stop engine sound
+            document.getElementById('engineSound').pause();
+            
+            // Update final score display
+            document.getElementById('finalScore').textContent = playerCar.score;
+            document.getElementById('finalLevel').textContent = playerCar.level;
+            
+            // Show game over screen
+            document.getElementById('gameOverScreen').style.display = 'flex';
+            
+            // Cancel game loop
+            cancelAnimationFrame(gameLoopId);
+        }
+        
+        // Update HUD
+        function updateHUD() {
+            // Update speed (convert to km/h)
+            const speedKmh = Math.floor(playerCar.speed * 15);
+            document.getElementById('speedValue').textContent = speedKmh;
+            
+            // Update score
+            document.getElementById('scoreValue').textContent = playerCar.score;
+            
+            // Update level
+            document.getElementById('levelValue').textContent = playerCar.level;
+            
+            // Update lane display
+            document.getElementById('currentLane').textContent = playerCar.lane;
+        }
+        
+        // Control Functions
+        function moveLeft() {
+            keys.left = true;
+        }
+        
+        function moveRight() {
+            keys.right = true;
+        }
+        
+        function clearMove() {
+            keys.left = false;
+            keys.right = false;
+        }
+        
+        function applyGas() {
+            keys.gas = true;
+            document.getElementById('gasPedal').style.transform = 'translateY(8px)';
+            document.getElementById('gasPedal').style.boxShadow = '0 0 0 #111, 0 5px 8px rgba(0, 0, 0, 0.5)';
+        }
+        
+        function releaseGas() {
+            keys.gas = false;
+            document.getElementById('gasPedal').style.transform = '';
+            document.getElementById('gasPedal').style.boxShadow = '0 8px 0 #111, 0 15px 20px rgba(0, 0, 0, 0.5)';
+        }
+        
+        function applyBrake() {
+            keys.brake = true;
+            document.getElementById('brakePedal').style.transform = 'translateY(8px)';
+            document.getElementById('brakePedal').style.boxShadow = '0 0 0 #111, 0 5px 8px rgba(0, 0, 0, 0.5)';
+        }
+        
+        function releaseBrake() {
+            keys.brake = false;
+            document.getElementById('brakePedal').style.transform = '';
+            document.getElementById('brakePedal').style.boxShadow = '0 8px 0 #111, 0 15px 20px rgba(0, 0, 0, 0.5)';
+        }
+        
+        // Keyboard Controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    keys.left = true;
+                    break;
+                case 'ArrowRight':
+                    keys.right = true;
+                    break;
+                case 'ArrowUp':
+                    keys.gas = true;
+                    break;
+                case 'ArrowDown':
+                    keys.brake = true;
+                    break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    keys.left = false;
+                    break;
+                case 'ArrowRight':
+                    keys.right = false;
+                    break;
+                case 'ArrowUp':
+                    keys.gas = false;
+                    break;
+                case 'ArrowDown':
+                    keys.brake = false;
+                    break;
+            }
+        });
+        
+        // Main Game Loop
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Apply controls
+            if (keys.left && playerCar.x > 20) {
+                playerCar.x -= 8;
+                if (playerCar.x < 100) playerCar.lane = 1;
+                else if (playerCar.x < 200) playerCar.lane = 2;
+                else playerCar.lane = 3;
+            }
+            
+            if (keys.right && playerCar.x < canvas.width - playerCar.width - 20) {
+                playerCar.x += 8;
+                if (playerCar.x < 100) playerCar.lane = 1;
+                else if (playerCar.x < 200) playerCar.lane = 2;
+                else playerCar.lane = 3;
+            }
+            
+            // Apply acceleration and braking
+            if (keys.gas && playerCar.fuel > 0) {
+                playerCar.speed = Math.min(playerCar.maxSpeed, playerCar.speed + playerCar.acceleration);
+            } else {
+                // Natural deceleration
+                playerCar.speed = Math.max(3, playerCar.speed - playerCar.deceleration);
+            }
+            
+            if (keys.brake) {
+                playerCar.speed = Math.max(2, playerCar.speed - playerCar.acceleration * 2);
+            }
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw game elements
+            drawRoad();
+            drawTrafficCars();
+            drawFuelCans();
+            drawPlayerCar();
+            
+            // Update HUD
+            updateHUD();
+            
+            // Continue game loop
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game info
+        updateHUD();
+    </script>
+</body>
+</html>
