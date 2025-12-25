@@ -1,14 +1,17 @@
-# 1. Create vercel.json with proper project name
-cat > vercel.json << 'EOF'
-{
+# Replace vercel.json with correct content
+echo '{
   "name": "car-racing-game",
-  "buildCommand": null,
-  "outputDirectory": "."
-}
-EOF
-
-# 2. Deploy to Vercel with lowercase name
-vercel --name car-racing-game --yes
-
-# 3. Deploy to production
-vercel --prod --yes
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}' > vercel.json
